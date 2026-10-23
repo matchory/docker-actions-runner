@@ -1,0 +1,30 @@
+name: Build image
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  # Weekly rebuild, so the apt upgrade in the Dockerfile picks up security fixes
+  # between base image releases.
+  schedule:
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
+
+jobs:
+  image:
+    uses: matchory/.github/.github/workflows/container-build.yml@24fd8d478ba1da1ee35aaa98e9dbd6a137f77505 # main
+    permissions:
+      contents: read
+      packages: write
+      id-token: write
+      attestations: write
+    with:
+      image: ghcr.io/matchory/actions-runner
+      push: ${{ github.event_name != 'pull_request' }}
